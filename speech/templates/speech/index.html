@@ -2,9 +2,11 @@
 
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Speech Text</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Tracker</title>
     <style>
         .highlight {
             background-color: yellow;
@@ -14,6 +16,60 @@
 <body>
     <h1>Your Speech Text</h1>
     <pre id="speech-text">{{ text }}</pre>
+    <button id="start-btn">Start Speech Tracking</button>
+    <div id="recognized-speech" style="margin-top: 20px;">
+        <strong>Recognized Speech:</strong>
+        <p id="speech-output"></p>
+    </div>
+    
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const textElement = document.getElementById('speech-text');
+        const speechOutputElement = document.getElementById('speech-output');
+        const originalText = textElement.innerText;
+        let currentIndex = 0;
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[event.results.length - 1][0].transcript.trim();
+            console.log('Spoken Text:', spokenText); // Log the spoken text
+            speechOutputElement.innerText = spokenText;
+
+            const textToHighlight = originalText.slice(currentIndex);
+            console.log('Text to Highlight:', textToHighlight); // Log the remaining text
+
+            const position = textToHighlight.toLowerCase().indexOf(spokenText.toLowerCase());
+            console.log('Position of match:', position); // Log the position of the match
+
+            if (position !== -1) {
+                currentIndex += position + spokenText.length;
+                console.log('New Current Index:', currentIndex); // Log the updated index
+
+                const highlightedText = `
+                    <span class="highlight">${originalText.slice(0, currentIndex)}</span>
+                    ${originalText.slice(currentIndex)}
+                `;
+                textElement.innerHTML = highlightedText;
+            } else {
+                console.log('No match found for:', spokenText); // Log when no match is found
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = () => {
+            console.log('Speech recognition ended');
+        };
+
+        document.getElementById('start-btn').onclick = () => {
+            console.log('Recognition started'); // Log when recognition starts
+            recognition.start();
+        };
+    </script>
 </body>
 </html>
 
